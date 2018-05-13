@@ -9,9 +9,9 @@ const char* password_serial_number = "123456789"; // has to be longer than 7 cha
 
 int i = 0;
 int val = 0;
-int last_val=HIGH;
+int last_val=0;
 uint8_t TurnCounter = 0;
-int doorDirection =1;
+
 struct tys_Status{
   byte battery_status;
   byte wifi_status;
@@ -95,26 +95,16 @@ void loop() {
     
     
     val = digitalRead(MotorEncoder2);
-    if(val != last_val){
-      if(val == LOW){
-        TurnCounter++;
-      }
+    if(TurnCounter<4){
+    if(val == 1){
+      TurnCounter++;
     }
-    last_val = val;
-    if(doorDirection == 1){
-      if(TurnCounter >= 4){
-        digitalWrite(MotorPin1, LOW);
-        digitalWrite(MotorPin2, LOW);
-        TurnCounter =0;
-      }  
+    if(TurnCounter >= 4){
+      digitalWrite(MotorPin1, LOW);
+      digitalWrite(MotorPin2, LOW);
+      TurnCounter =0;
     }
-    else{
-      if(TurnCounter >= 5){
-        digitalWrite(MotorPin1, LOW);
-        digitalWrite(MotorPin2, LOW);
-        TurnCounter =0;
-      }
-    }
+  }
   //Serial.println(WiFi.localIP());
 }
 
@@ -209,26 +199,16 @@ void handleCounter(){
 /*                              handle Check                            */
 /*----------------------------------------------------------------------*/
 void handleCheck(){
-    byte wifi_status;
-    bool lock_status;
-    bool door_status;
-    bool connection_status;
     const size_t bufferSize = JSON_OBJECT_SIZE(6);
     DynamicJsonBuffer jsonBuffer(bufferSize);
 
     JsonObject& root = jsonBuffer.createObject();
-
-    wifi_status = get_WifiStatus();
-    door_status = get_doorStatus();
-    lock_status = get_lockStatus();
-    connection_status = ConnectionStatus();
-    
     root["battery_status"] = 4;
-    root["wifi_status"] = wifi_status;
-    root["lock_status"] = lock_status;
-    root["door_status"] = door_status;
-    root["connection_status"] = connection_status;
-    root["message"] = ":D";
+    root["wifi_status"] = 2;
+    root["lock_status"] = true;
+    root["door_status"] = false;
+    root["connection_status"] = true;
+    root["message"] = "esp8266 is garbage";
 
     String output;
     root.prettyPrintTo(output);
@@ -331,7 +311,6 @@ void handleToggle(){
   String output;
   
   if(i%2 == 0){
-    doorDirection = 1;
     digitalWrite(MotorPin1, LOW);
     digitalWrite(MotorPin2, HIGH);
     
@@ -345,9 +324,8 @@ void handleToggle(){
     root.prettyPrintTo(output);
     server.send(200, "text/plain", output);
     } 
-  else {
-    doorDirection = 0;
-    digitalWrite(MotorPin1, HIGH);
+    else {
+    digitalWrite(MotorPin1, LOW);
     digitalWrite(MotorPin2, LOW);
 
     root["battery_status"] = 4;
@@ -469,7 +447,7 @@ void setSubscriber(){
           }
           else
           {
-            digitalWrite(MotorPin1, HIGH);
+            digitalWrite(MotorPin1, LOW);
             digitalWrite(MotorPin2, LOW);
             handlepublish("false");
           }
@@ -481,8 +459,6 @@ void setSubscriber(){
 }
 
 void handlepublish(String vstatus){
-  
-  
   HTTPClient publishHttp;
   publishHttp.begin("http://api.backendless.com/8178E63C-1936-5C74-FFC6-B90735872B00/BA7F64EC-A219-CA3F-FFB7-B81B1BBC5300/messaging/reponse_toggle");
   publishHttp.addHeader("Content-Type", "application/json");
@@ -510,67 +486,21 @@ byte get_BatteryStatus (){
 }
 
 byte get_WifiStatus(){
-  byte WifiStatus;
-  long rssi;
-  if (WiFi.status() == WL_CONNECTED){
-    rssi= WiFi.RSSI();
-    if (rssi > -55) { 
-      WifiStatus = 5;
-    } 
-    else if (rssi < -55 & rssi > -65) {
-      WifiStatus = 4;
-    } 
-    else if (rssi < -65 & rssi > -70) {
-      WifiStatus = 3;
-    } 
-    else if (rssi < -70 & rssi > -78) {
-      WifiStatus = 2;
-    } 
-    else if (rssi < -78 & rssi > -82) {
-      WifiStatus = 1;
-    } 
-    else {
-      WifiStatus = 0;
-    }
-  }
-  else{
-    WifiStatus = 0;
-  } 
-  
-  return(WifiStatus);
+  long rssi; 
+  rssi= WiFi.RSSI();
+  return(4);
+  //return(rssi);
 }
 
 bool get_lockStatus(){
-  bool lockStatus;
-  if(doorDirection == 1){
-    lockStatus = true;
-  }
-  else{
-    lockStatus = false;
-  }
-  return(lockStatus);
+  
 }
 
 bool get_doorStatus(){
-  bool doorStatus;
-  doorStatus = digitalRead(reedSwitch_Pin);
-  if(doorStatus == 0){
-    doorStatus = true;
-  }
-  else{
-    doorStatus  = false;
-  }
-  return(doorStatus);
+  
 }
 
 bool ConnectionStatus(){
-  bool ConnectionStatus;
-  if (WiFi.status() == WL_CONNECTED){
-    ConnectionStatus = true;
-  }
-  else{
-    ConnectionStatus = false;
-  }
-  return(ConnectionStatus);
+  
 }
 
