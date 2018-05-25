@@ -97,9 +97,8 @@ void loop() {
     val = digitalRead(MotorEncoder2);
     if(val != last_val){
       if(val == LOW){
-       TurnCounter++;
+        TurnCounter++;
       }
-       Serial.println(TurnCounter);
     }
     last_val = val;
     if(doorDirection == 1){
@@ -107,53 +106,52 @@ void loop() {
         digitalWrite(MotorPin1, LOW);
         digitalWrite(MotorPin2, LOW);
         TurnCounter =0;
-        Serial.println("motorstop");
       }  
     }
     else{
-      if(TurnCounter >= 4){
+      if(TurnCounter >= 5){
         digitalWrite(MotorPin1, LOW);
         digitalWrite(MotorPin2, LOW);
         TurnCounter =0;
-        Serial.println("motorstop");
       }
     }
-//  int httpCode;
-//  httpCode = httpSubscriber.GET();
-//  String thisString = httpSubscriber.getString();
-//  delay(1000);
-//    if (httpCode == 200 && thisString != "{\"messages\":[]}")
-//    {
-//      const size_t bufferSize = JSON_ARRAY_SIZE(1) + JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(3) + JSON_OBJECT_SIZE(5) + 310;
-//      DynamicJsonBuffer jsonBuffer(bufferSize);
-//      
-//      char jsonValue[sizeof(thisString)];
-//      thisString.toCharArray(jsonValue, sizeof(jsonValue));
-//      
-//      JsonObject& root = jsonBuffer.parseObject(thisString);
-//            
-//      JsonObject& messages0 = root["messages"][0];
-//
-//      String messages0_data = messages0["data"];
-//      
-//          if (messages0_data == "toggle")
-//        {
-//          if(doorDirection == 0){
-//          doorDirection = 1;
-//    
-//          digitalWrite(MotorPin1, LOW);
-//          digitalWrite(MotorPin2, HIGH);
-//          handlepublish();
-//          }
-//          else{
-//          doorDirection = 0;
-//          
-//          digitalWrite(MotorPin1, HIGH);
-//          digitalWrite(MotorPin2, LOW);
-//          handlepublish();
-//          }
-//        }
-//    }
+  Serial.println(WiFi.localIP());
+  int httpCode;
+  httpCode = httpSubscriber.GET();
+  String thisString = httpSubscriber.getString();
+  delay(1000);
+    if (httpCode == 200 && thisString != "{\"messages\":[]}")
+    {
+      const size_t bufferSize = JSON_ARRAY_SIZE(1) + JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(3) + JSON_OBJECT_SIZE(5) + 310;
+      DynamicJsonBuffer jsonBuffer(bufferSize);
+      
+      char jsonValue[sizeof(thisString)];
+      thisString.toCharArray(jsonValue, sizeof(jsonValue));
+      
+      JsonObject& root = jsonBuffer.parseObject(thisString);
+            
+      JsonObject& messages0 = root["messages"][0];
+
+      String messages0_data = messages0["data"];
+      
+          if (messages0_data == "toggle")
+        {
+          if(doorDirection == 0){
+          doorDirection = 1;
+    
+          digitalWrite(MotorPin1, LOW);
+          digitalWrite(MotorPin2, HIGH);
+          handlepublish();
+          }
+          else{
+          doorDirection = 0;
+          
+          digitalWrite(MotorPin1, HIGH);
+          digitalWrite(MotorPin2, LOW);
+          handlepublish();
+          }
+        }
+    }
 }
 
 /*----------------------------------------------------------------------*/
@@ -415,7 +413,6 @@ void setSubscriber(){
     httpSubscriber.addHeader("Content-Type", "application/json");
     httpCode = httpSubscriber.GET();
     String thisString = httpSubscriber.getString();
-    server.send(200, "text/plain", "200: Ok" + httpCode);
     if (httpCode == 200 && thisString != "{\"messages\":[]}")
     {
       const size_t bufferSize = JSON_ARRAY_SIZE(1) + JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(3) + JSON_OBJECT_SIZE(5) + 310;
@@ -447,16 +444,12 @@ void setSubscriber(){
           digitalWrite(MotorPin1, HIGH);
           digitalWrite(MotorPin2, LOW);
           }
-//          handleSaveStatusInServer();
-//          handlepublish();
+          handleSaveStatusInServer();
+          handlepublish();
         }
     }
   }
-  else
-  {
-    server.send(400, "text/plain", "400: error");
-  }
-  httpSubscriber.end();
+  
 }
 
 void handlepublish(){
